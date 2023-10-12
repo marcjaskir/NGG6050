@@ -62,9 +62,8 @@ clear data
 % EXERCISE:
 % laterErrFcn = @(fits) <**YOUR OBJECTIVE FUNCTION HERE AS A FUNCTION OF FITS**>;
 
-% Chat-GPT conversation link: https://chat.openai.com/share/bd9e88a5-86db-431e-a2bc-7d7bfe5ad11c
-
-laterErrFcn = @(fits) -sum(log(likelihoodFunction(fits, RTs)));
+fits = [mean(RTs); std(RTs)];
+laterErrFcn = @(fits) compute_negative_log_likelihood(RTs, fits);
 
 %%  3. Define initial conditions
 %   
@@ -83,11 +82,9 @@ upperBounds = [1000 1000];
 % EXERCISE:
 % initialValues = [<**ADD INITIAL VALUES HERE**>];
 
-% Chat-GPT conversation link: https://chat.openai.com/share/bd9e88a5-86db-431e-a2bc-7d7bfe5ad11c
-
 meanRT = mean(RTs);          % Mean of the reciprocal RT distribution
 stdRT = std(RTs);            % Standard deviation of the reciprocal RT distribution
-initialValues = [1/meanRT, stdRT];
+initialValues = [meanRT, stdRT];
 
 
 %%  4. Run the fits
@@ -118,8 +115,36 @@ gs = GlobalSearch;
    
 % Run it, returning the best-fitting parameter values and the negative-
 % log-likelihood returned by the objective function
-[fits(ii,:), nllk] = run(gs,problem);
+[fits(:), nllk] = run(gs,problem);
 
 %%  5. Evaluate the fits
 %
 %   EXERCISE: How do you know if you got a reasonable answer?
+
+histogram(1 ./ RTs)
+
+mu_fit = 1 ./ fits(1);
+sigma_fit = 1 ./ fits(2);
+
+disp(mu_fit)
+disp(sigma_fit)
+
+% The best fitting parameter values correspond well with the reciprical RT
+% distribution!
+
+%% 6. Define functions
+
+% Chat-GPT conversation link for generating this function: https://chat.openai.com/share/25ab992d-b3c7-4f32-8fb5-fd95b9fa4137
+
+% Define function for computing negative log likelihood
+function neg_log_likelihood = compute_negative_log_likelihood(observations, distribution_params)
+
+    % Extract the mean and standard deviation from the distribution_params tuple
+    mean_val = distribution_params(1);
+    std_dev = distribution_params(2);
+    
+    % Calculate the negative log likelihood
+    neg_log_likelihood = -sum(log(normpdf(observations, mean_val, std_dev)));
+end
+
+
